@@ -6,7 +6,7 @@ const axiosPlugin = {
 
 
         const axiosInstance = axios.create({
-            baseURL: 'http://31.207.35.25:8000',
+            baseURL: 'http://51.68.46.67:8000',
         });
 
 

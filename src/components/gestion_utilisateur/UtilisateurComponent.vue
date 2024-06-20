@@ -306,7 +306,7 @@ export default {
       lastname: "",
       phone: "",
       email: "",
-      role: ""
+      role: "",
     },
 
     roles: ['ADMIN', 'USER'],
