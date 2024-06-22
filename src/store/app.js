@@ -2,49 +2,48 @@
 import { defineStore } from 'pinia'
 
 export const useAppStore = defineStore('app', {
-  state: () => ({
-    isLogged: false,
-    currentUser: {},
-    token: String,
-  }),
-  // getters: {
-  //   //TODO: Pour les verifications des roles
-  //   getRole(state) {
-  //     if (state.currentUser.role == 'Administrateur' || state.currentUser.role == 'Agent' || state.currentUser.role == 'Comptable' || state.currentUser.role == 'Chef d\'agent') {
-  //       return true
-  //     } else {
-  //       return false
-  //     }
-  //   }
-  // },
+    state: () => ({
+        isLogged: false,
+        currentUser: {},
+        token: String,
+        authenticated: false,
+        user: {}
+    }),
 
-  actions: {
-    logout() {
-      this.currentUser = {}
-      this.isLogged = !this.isLogged
-      
+    getters: {
+        authenticated(state) {
+            return state.authenticated
+        },
     },
-    setLogged() {
-      this.isLogged = !this.isLogged
+    mutations: {
+        setAuthenticated(state, value) {
+            state.authenticated = true
+            state.user = value
+            console.log('storevapp = ', value)
+            window.localStorage.setItem('test session', JSON.stringify(value))
+        },
+        setToken(state, token) {
+          state.token = token;
+        },
     },
-    getCurrentUser(user) {
-      this.currentUser = user;
-    },
-  }
-  // actions: {
-  //   //TODO: Pour récupérer l'utilisateur qui vient de se connecter
-  //   setCurrentUser(user) {
-  //     this.currentUser = user;
-  //   },
-  //   //TODO: Variable qui qui indique si quelqu'un est connecté ou pas
-  //   setLogged() {
-  //     this.isLogged = !this.isLogged
-  //   },
-  //   //TODO: Fonction de déconnexion
-  //   logout() {
-  //     this.currentUser = {}
-  //     this.isLogged = !this.isLogged
-  //     window.location.reload();
-  //   }
-  // }
+
+    actions: {
+
+      setToken(token) {
+        this.setToken(token);
+      },
+
+        logout() {
+            this.currentUser = {}
+            this.isLogged = !this.isLogged
+
+        },
+        setLogged() {
+            this.isLogged = !this.isLogged
+        },
+        getCurrentUser(user) {
+            this.currentUser = user;
+        },
+    }
+
 })

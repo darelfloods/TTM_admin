@@ -6,7 +6,7 @@
         <template v-slot:prepend>
           <v-icon size="small" icon="mdi-account-group"></v-icon>
           <v-card-title color="primary">
-            Utilisateurs
+            Administrateur
           </v-card-title>
         </template>
         <template v-slot:divider>
@@ -19,7 +19,7 @@
       <v-row>
         <div class="d-flex align-center flex-column">
           <div class="d-flex flex-wrap justify-content-between">
-            <v-card class="mx-4 my-6" width="300" title="Utilisateurs actif" prepend-icon="mdi-account-group"
+            <v-card class="mx-4 my-6" width="300" title="Administrateurs" prepend-icon="mdi-account-group"
               style="background: #CEE5FF;">
               <div class="mx-4 my-6">
                 <h1>{{ numberusers }}</h1>
@@ -27,17 +27,7 @@
             </v-card>
           </div>
         </div>
-        <div class="d-flex align-center flex-column">
-          <div class="d-flex flex-wrap justify-content-between">
-            <v-card class="mx-4 my-6" width="300" title="Utilisateurs inactif" prepend-icon="mdi-account-group"
-              style="background: #CEE5FF;">
-              <div class="mx-4 my-6">
-                <h1>{{ numberusersinactif }}</h1>
-              </div>
-            </v-card>
-          </div>
-        </div>
-        <!-- <v-card class="mx-4 my-6" width="300" title="Ajouter un utilisateur" prepend-icon="mdi-account-group"
+        <v-card class="mx-4 my-6" width="300" title="Ajouter un Admin" prepend-icon="mdi-account-group"
           @click="dialog = true" style="background: #00639A; color: white;">
           <div>
             <h1><svg xmlns="http://www.w3.org/2000/svg" width="57" height="56" viewBox="0 0 57 56" fill="none">
@@ -46,13 +36,13 @@
                   fill="#E8E5FF" />
               </svg></h1>
           </div>
-        </v-card> -->
+        </v-card>
       </v-row>
 
       <v-card class="mx-auto mt-8">
         <v-btn prepend-icon="mdi-reload" color="blue" @click="get_user"><v-span>Actualiser</v-span></v-btn>
         <v-card-title>
-          Liste des utilisateurs
+          Liste des Administrateurs
           <v-spacer></v-spacer>
           <v-text-field v-model="search" label="Recherche" single-line hide-details variant="outlined"></v-text-field>
         </v-card-title>
@@ -60,18 +50,12 @@
         <v-data-table :headers="headers" :items="users" :search="search" items-per-page="5">
           <template v-slot:item.actions="{ item }">
             <v-container>
-              <!-- <v-row justify="center" align="center">
-                <v-btn prepend-icon="mdi-pencil" @click="choiceDialog = true; id_compte = item.id; user = item.user;"
-                  :disabled="item.user.role === 'USER'"></v-btn>
-              </v-row> -->
               <v-row justify="center" align="center">
-                <v-btn prepend-icon="mdi-account-off" color="red"
-                  @click="dialogDelete = true; id_compte = item.id; user = item.user;"
-                  :disabled="!item.activate === true"></v-btn>
-                <v-btn prepend-icon="mdi-account-reactivate" color="blue"
-                  @click="choiceDialog = true; id_compte = item.id; user = item.user;"
-                  :disabled="!item.activate === false"></v-btn>
-
+                <v-btn prepend-icon="mdi-pencil"
+                  @click="choiceDialog = true; id_compte = item.id; user = item.user;"></v-btn>
+                <!-- <v-btn v-if="item.user.role !== 'USER'" prepend-icon="mdi-pencil"
+                  @click="choiceDialog = true; id_compte = item.id; user = item.user;"></v-btn> -->
+                <v-btn prepend-icon="mdi-delete" color="red" @click="dialogDelete = true; user = item.user;"></v-btn>
               </v-row>
 
             </v-container>
@@ -84,25 +68,29 @@
 
 
 
-  <!-- modal d'ajout un utilisateur------------------------------------------------------------------------------------------------------------------------------------------>
+  <!-- modal d'ajout un Administrateur------------------------------------------------------------------------------------------------------------------------------------------>
   <v-row justify="center">
     <v-dialog v-model="dialog" persistent width="1024">
       <v-card>
         <v-form ref="form">
           <v-card-title>
-            <span class="text-h6">Ajouter un utilisateur</span>
+            <span class="text-h6">Ajouter un Administrateur</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" sm="6">
+                  <v-text-field v-model="user.lastname" clearable :rules="rules" label="Pseudo *"
+                    hint="Veuillez entrer le pseudo" variant="outlined"></v-text-field>
+                </v-col>
+                <!-- <v-col cols="12" sm="6">
                   <v-text-field v-model="user.lastname" clearable :rules="rules" label="Nom *"
                     hint="Veuillez entrer le nom" variant="outlined"></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6">
                   <v-text-field v-model="user.firstname" :rules="rules" clearable label="Prénom *"
                     hint="Veuillez entrer le prenom" variant="outlined"></v-text-field>
-                </v-col>
+                </v-col> -->
                 <v-col cols="12" sm="6">
                   <v-text-field v-model="user.phone" clearable :rules="rules" label="Télephone *"
                     hint="Veuillez entrer le télephone" variant="outlined"></v-text-field>
@@ -112,8 +100,8 @@
                     hint="Veuillez entrer un email valide" variant="outlined"></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6">
-                  <v-text-field v-model="user.role" clearable :rules="rules" label="Rôle *"
-                    hint="Veuillez sélectionner un rôle" disabled variant="outlined"></v-text-field>
+                  <v-select v-model="user.role" :items="roles" label="Rôle *" hint="Veuillez sélectionner un rôle"
+                    variant="outlined"></v-select>
                 </v-col>
               </v-row>
             </v-container>
@@ -137,25 +125,29 @@
     </v-dialog>
   </v-row>
 
-  <!-- modal de modification d'un utilisateur------------------------------------------------------------------------------------------------------------------------------------------>
+  <!-- modal de modification d'un Administrateur------------------------------------------------------------------------------------------------------------------------------------------>
   <v-row justify="center">
     <v-dialog v-model="updateDialog" persistent width="1024">
       <v-card>
         <v-form ref="form">
           <v-card-title>
-            <span class="text-h6">Modification d'un utilisateur</span>
+            <span class="text-h6">Modification d'un Administrateur</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" sm="6">
+                  <v-text-field v-model="user.lastname" clearable :rules="rules" label="Pseudo *"
+                    hint="Veuillez entrer le pseudo" variant="outlined"></v-text-field>
+                </v-col>
+                <!-- <v-col cols="12" sm="6">
                   <v-text-field v-model="user.lastname" clearable :rules="rules" label="Nom *"
                     hint="Veuillez entrer le nom" variant="outlined"></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6">
                   <v-text-field v-model="user.firstname" :rules="rules" clearable label="Prénom *"
                     hint="Veuillez entrer le prenom" variant="outlined"></v-text-field>
-                </v-col>
+                </v-col> -->
                 <v-col cols="12" sm="6">
                   <v-text-field type="number" v-model="user.phone" clearable :rules="rules" label="Télephone *"
                     hint="Veuillez entrer le télephone" variant="outlined"></v-text-field>
@@ -192,7 +184,7 @@
 
     <v-dialog v-model="dialogDelete" persistent max-width="600px">
       <v-card>
-        <v-card-title class="text-h6">Êtes-vous sûr de bien vouloir désactiver ce compte?</v-card-title>
+        <v-card-title class="text-h6">Êtes-vous sûr de bien vouloir supprimer cet élément?</v-card-title>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue-darken-1" variant="text" @click="annuler">Annuler</v-btn>
@@ -203,15 +195,33 @@
     </v-dialog>
   </v-row>
   <v-row justify="center">
-    <v-dialog v-model="choiceDialog" persistent max-width="600px">
+    <v-dialog v-model="choiceDialog" persistent width="600">
       <v-card>
-        <v-card-title class="text-h6">Êtes-vous sûr de bien vouloir réactiver ce compte?</v-card-title>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="annuler">Annuler</v-btn>
-          <v-btn color="red" variant="flat" @click="enable_user">Oui</v-btn>
-          <v-spacer></v-spacer>
-        </v-card-actions>
+        <v-form ref="form">
+          <v-card-title>
+            <span class="text-h6">Faites un choix</span>
+          </v-card-title>
+          <v-card-text>
+            <v-container>
+              <v-btn color="blue-darken-1" variant="text" @click="updateDialog = true; user = item.user;">
+                Modifier Administrateur
+              </v-btn>
+              <v-btn color="blue-darken-1" variant="flat" @click="subDialog = true">
+                Faire un subscription
+              </v-btn>
+            </v-container>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="blue-darken-1" variant="text" @click="annuler1">
+              Annuler
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+        <v-snackbar v-model="snackbar" :color="snackbarColor" class="snackbar">
+          {{ snackbarText }}
+          <!-- <v-btn color="white" text @click="snackbar.show = false" prepend-icon="mdi-close"></v-btn> -->
+        </v-snackbar>
       </v-card>
     </v-dialog>
 
@@ -269,7 +279,6 @@ import { VDataTable } from "vuetify/labs/VDataTable";
 import moment from "moment";
 import local from "@/storage/local";
 
-
 export default {
   components: {
     VDataTable,
@@ -295,7 +304,7 @@ export default {
 
       { key: "id", title: "#" },
       { key: "user.lastname", title: "Pseudo" },
-      //  { key: "user.firstname", title: "Prénom" },
+      // { key: "user.firstname", title: "Prénom" },
       { key: "user.phone", title: "Télephone" },
       { key: "user.email", title: "Email" },
       // { key: "user.role", title: "Role" },
@@ -307,15 +316,15 @@ export default {
     users: [],
     userIds: [],
     user: {
-      // firstname: "",
+      firstname: "",
       lastname: "",
       phone: "",
       email: "",
-      role: "USER",
+      role: "",
     },
     id_compte: "",
 
-    // roles: ['USER'],
+    roles: ['ADMIN', 'USER'],
     rules: [
       (v) => !!v || 'Ce champ est requis', // Add any validation rules you need
     ],
@@ -338,16 +347,7 @@ export default {
 
     numberusers() {
       // Utilisez la propriété length pour obtenir le nombre de tickets dans le tableau
-      const usersActifs = this.users.filter(user => user.activate === true);
-      // Utilisez la propriété length pour obtenir le nombre d'utilisateurs actifs
-      return usersActifs.length;
-    },
-
-
-    numberusersinactif() {
-      const usersInactifs = this.users.filter(user => user.activate === false);
-      // Utilisez la propriété length pour obtenir le nombre d'utilisateurs Inactifs
-      return usersInactifs.length;
+      return this.users.length;
     },
     formattedDate() {
       return (date) => moment(date).format("DD/MM/YYYY à HH:mm");
@@ -400,7 +400,7 @@ export default {
 
     async get_user() {
       try {
-        const response = await this.$axios.get("/account/get_by_role_user");
+        const response = await this.$axios.get("/account/get_by_role_admin");
         for (var i = 0; i < response.data.length; i++) {
           response.data[i].subscription_date = this.formattedDate(
             response.data[i].subscription_date
@@ -414,35 +414,47 @@ export default {
         }
 
         this.users = response.data;
-        // this.userIds = this.users.map(user => user.id);
+        this.userIds = this.users.map(user => user.id);
         console.log('all users =', this.users);
         console.log('all user_id =', this.userIds);
       } catch (error) {
         console.error('Error fetching users:', error);
       }
     },
+
     async add_user() {
-
-      try {
-        const Data = {
-
-          firstname: this.user.firstname,
-          lastname: this.user.lastname,
-          email: this.user.email,
-          phone: this.user.phone,
-          role: this.user.role,
-          password: "root"
+      const accessToken = local.getSharedData();
+      console.log("accessToken", accessToken.token);
+      if (accessToken) {
+        const headers = {
+          Authorization: `Bearer ${accessToken.token.access_token}`,
         };
-        const response = await this.$axios.post("/user/add", Data);
-        this.user = {};  // Effacez les données après l'ajout réussi
-        console.log('Add user =', response.Data);
-        this.get_user();  // Rafraîchissez la liste des utilisateurs
-        this.showSnackbar('Utilisateur ajouté avec succès', 'success');
-        this.dialog = false;
-      } catch (error) {
-        console.error('Error adding user:', error);
-        this.showSnackbar('Une erreur s\'est produite lors de l\'ajout de l\'utilisateur, veuillez vérifier les champs', 'error');
+
+        console.log("entete", headers);
+        try {
+          const Data = {
+
+            firstname: this.user.firstname,
+            lastname: this.user.lastname,
+            email: this.user.email,
+            phone: this.user.phone,
+            role: this.user.role,
+            password: "root"
+          };
+          const response = await this.$axios.post("/user/add", Data, {
+            headers: headers,
+          });
+          this.user = {};  // Effacez les données après l'ajout réussi
+          console.log('Add user =', response.Data);
+          this.get_user();  // Rafraîchissez la liste des utilisateurs
+          this.showSnackbar('Utilisateur ajouté avec succès', 'success');
+          this.dialog = false;
+        } catch (error) {
+          console.error('Error adding user:', error);
+          this.showSnackbar('Une erreur s\'est produite lors de l\'ajout de l\'utilisateur, veuillez vérifier les champs', 'error');
+        }
       }
+
     },
 
     async validate() {
@@ -460,81 +472,83 @@ export default {
       }
     },
 
-    enable_user() {
-
+    async updated_user() {
       const accessToken = local.getSharedData();
-
       console.log("accessToken", accessToken.token);
-
-      console.log('user =', this.user);
-      const requestData = {
-        id_compte: this.id_compte,
-        id: this.user.id,
-        firstname: this.user.firstname,
-        lastname: this.user.lastname,
-        phone: this.user.phone,
-        email: this.user.email,
-        role: this.user.role,
-      };
       if (accessToken) {
         const headers = {
           Authorization: `Bearer ${accessToken.token.access_token}`,
         };
 
         console.log("entete", headers);
-        this.$axios.put('/account/enable_account/' + this.id_compte, requestData, {
-          headers: headers,
-        })
-          .then(() => {
-            this.showSnackbar('Compte réactiver avec succès', 'success');
-            this.get_user(); // Rafraîchit la liste des Utilisateurs après la suppression
-          })
-          .catch((error) => {
-            console.error('Erreur lors de la réactivation du compte:', error);
-            this.showSnackbar('Erreur lors de la réactivation du compte', 'error');
-          })
-          .finally(() => {
-            this.user = {};
-            this.choiceDialog = false; // Ferme la boîte de dialogue après la suppression
-          });
+        const { valid } = await this.$refs.form.validate();
 
+        if (valid) {
+          try {
+            console.log('USER =', this.user);
+            const requestData = {
+              // id_compte : this.id_compte,
+              id: this.user.id,
+              firstname: this.user.firstname,
+              lastname: this.user.lastname,
+              phone: this.user.phone,
+              email: this.user.email,
+              role: this.user.role,
+            };
+            console.log('id_compte=', this.id_compte.id)
+
+            const response = await this.$axios.put('/user/update/' + this.user.id, requestData, {
+              headers: headers,
+            });
+            console.log('Update user =', response.data);
+            this.user = {}; // Effacez les données du conducteur après la mise à jour réussie
+            this.showSnackbar('Utilisateur modifié avec succès', 'success');
+            this.updateDialog = false;
+            this.choiceDialog = false;
+            this.get_user();
+          } catch (error) {
+            console.error('Erreur lors de la mise à jour:', error);
+            this.showSnackbar('Une erreur s\'est produite lors de la modification ...', 'error');
+          }
+        } else {
+          console.log("BAD !!!!");
+          this.showSnackbar('Une erreur s\'est produite lors de la modification ...', 'error');
+        }
       }
+
     },
 
     deleteItemConfirm() {
       const accessToken = local.getSharedData();
 
       console.log("accessToken", accessToken.token);
-
       console.log('user =', this.user);
-
-      const requestData = {
-        id_compte: this.id_compte,
-        id: this.user.id,
-        firstname: this.user.firstname,
-        lastname: this.user.lastname,
-        phone: this.user.phone,
-        email: this.user.email,
-        role: this.user.role,
-      };
 
       if (accessToken) {
         const headers = {
-          Authorization: `Bearer ${accessToken.token.access_token}`,
+          Authorization: `Bearer ${accessToken.token.access_token}`
         };
 
         console.log("entete", headers);
 
-        this.$axios.put('/account/disable_account/' + this.id_compte, requestData, {
+        this.$axios.delete(`/user/delete/${this.user.id}`, {
           headers: headers,
+          data: {
+            id: this.user.id,
+            firstname: this.user.firstname,
+            lastname: this.user.lastname,
+            phone: this.user.phone,
+            email: this.user.email,
+            role: this.user.role,
+          }
         })
           .then(() => {
-            this.showSnackbar('Utilisateur désactivé avec succès', 'success');
-            this.get_user(); // Rafraîchit la liste des utilisateurs après la suppression
+            this.showSnackbar('Utilisateur supprimé avec succès', 'success');
+            this.get_user(); // Rafraîchit la liste des Utilisateurs après la suppression
           })
           .catch((error) => {
-            console.error('Erreur lors de la désactivation du compte:', error);
-            this.showSnackbar('Erreur lors de la désactivation du compte', 'error');
+            console.error('Erreur lors de la suppression du Utilisateur:', error);
+            this.showSnackbar('Erreur lors de la suppression du Utilisateur', 'error');
           })
           .finally(() => {
             this.user = {};
@@ -546,39 +560,46 @@ export default {
 
     async validate_rate() {
       const { valid } = await this.$refs.form.validate();
+      const accessToken = local.getSharedData();
+      console.log("accessToken", accessToken.token);
+      if (accessToken) {
+        const headers = {
+          Authorization: `Bearer ${accessToken.token.access_token}`,
+        };
 
-      if (valid) {
-        try {
-          console.log('rate id =', this.sub.id);
+        console.log("entete", headers);
 
-          // Choisissez un utilisateur spécifique ou ajustez votre logique pour sélectionner le bon utilisateur
-          const IdCompte = this.id_compte;
-          console.log('id_compte =', IdCompte);
+        if (valid) {
+          try {
+            console.log('rate id =', this.sub.id);
 
-          const params = { rate_id: this.sub.id };
-          const response = await this.$axios.put(`/account/subscribe_rate/${IdCompte}`, null, { params });
+            // Choisissez un utilisateur spécifique ou ajustez votre logique pour sélectionner le bon utilisateur
+            const IdCompte = this.id_compte;
+            console.log('id_compte =', IdCompte);
 
-          console.log('subscribe_rate user =', response.data);
-          this.sub = {}; // Effacez les données du conducteur après la mise à jour réussie
-          this.subDialog = false;
-          this.choiceDialog = false;
-          this.updateDialog = false;
-          this.choiceDialog = false;
-          this.get_user();
-        } catch (error) {
-          console.error('Erreur lors de la mise à jour:', error);
+            const params = { rate_id: this.sub.id };
+            const response = await this.$axios.put(`/account/subscribe_rate/${IdCompte}`, null, { params }, {
+              headers: headers,
+            });
+
+            console.log('subscribe_rate user =', response.data);
+            this.sub = {}; // Effacez les données du conducteur après la mise à jour réussie
+            this.subDialog = false;
+            this.choiceDialog = false;
+            this.updateDialog = false;
+            this.choiceDialog = false;
+            this.get_user();
+          } catch (error) {
+            console.error('Erreur lors de la mise à jour:', error);
+            this.showSnackbar('Une erreur s\'est produite lors de la modification ...', 'error');
+          }
+        } else {
+          console.log("BAD !!!!");
           this.showSnackbar('Une erreur s\'est produite lors de la modification ...', 'error');
         }
-      } else {
-        console.log("BAD !!!!");
-        this.showSnackbar('Une erreur s\'est produite lors de la modification ...', 'error');
       }
+
     },
-
-
-
-
-
 
   },
 

@@ -4,9 +4,9 @@
     <v-row>
       <v-breadcrumbs :items="items">
         <template v-slot:prepend>
-          <v-icon size="small" icon="mdi-barcode"></v-icon>
+          <v-icon size="small" icon="mdi-list-box"></v-icon>
           <v-card-title color="primary">
-            Grille Tarifaire
+            Tarification
           </v-card-title>
         </template>
         <template v-slot:divider>
@@ -20,7 +20,7 @@
       <v-row>
         <div class="d-flex align-center flex-column">
           <div class="d-flex flex-wrap justify-content-between">
-            <v-card class="mx-4 my-6" width="300" title="Tarifs" prepend-icon="mdi-barcode" style="background: #CEE5FF;">
+            <v-card class="mx-4 my-6" width="300" title="Tarifs" prepend-icon="mdi-list-box" style="background: #CEE5FF;">
               <div class="mx-4 my-6">
                 <h1> {{ Rate }}</h1>
               </div>
@@ -30,7 +30,7 @@
         <!-- <v-btn color="success" prepend-icon="mdi-plus-circle" @click="dialog = true">
           Ajouter un véhicule
         </v-btn> -->
-        <v-card class="mx-4 my-6" type="button" width="300" title="Ajouter un tarif" prepend-icon="mdi-barcode"
+        <v-card class="mx-4 my-6" type="button" width="300" title="Ajouter un tarif" prepend-icon="mdi-list-box"
           @click="dialog = true" style="background: #00639A; color: white;">
           <div>
             <h1> <svg xmlns="http://www.w3.org/2000/svg" width="57" height="56" viewBox="0 0 57 56" fill="none">
@@ -197,6 +197,7 @@ background: var(--material-theme-sys-light-surface-variant, #DEE3EB)">
 <script>
 // import { VDataTable } from "vuetify/labs/VDataTable";
 import moment from "moment";
+import local from "@/storage/local";
 
 export default {
   components: {
@@ -282,18 +283,32 @@ export default {
     },
 
     async add_rate() {
+      const accessToken = local.getSharedData();
+
+      console.log("accessToken", accessToken.token)
+
       console.log(this.rate)
-      this.$axios
-        .post("/rate/add", this.rate).then((response) => {
-          this.rate = {};
-          console.log('Add rate =', response);
-          this.get_rates();
+      if (accessToken) {
+        const headers = {
+          Authorization: `Bearer ${accessToken.token.access_token}`,
+        };
 
-        })
-        .catch((error) => {
-          console.log(error.response.data.detail);
+        console.log("entete", headers);
+        this.$axios
+          .post("/rate/add", this.rate, {
+            headers: headers,
+          }).then((response) => {
+            this.rate = {};
+            console.log('Add rate =', response);
+            this.get_rates();
 
-        });
+          })
+          .catch((error) => {
+            console.log(error.response.data.detail);
+
+          });
+      }
+
     },
     async validate() {
       const { valid } = await this.$refs.form.validate();
@@ -311,56 +326,86 @@ export default {
     },
 
     async updated_rate() {
+      const accessToken = local.getSharedData();
+
+      console.log("accessToken", accessToken.token)
       const { valid } = await this.$refs.form.validate();
 
-      if (valid) {
-        try {
-          console.log('rate =', this.rate);
-          const requestData = {
-            id: this.rate.id,
-            libelle: this.rate.libelle,
-            price: this.rate.price,
-            credit: this.rate.credit,
-            // created_at: this.rate.created_at,
-            // updated_at: this.rate.updated_at,
-          };
+      if (accessToken) {
+        const headers = {
+          Authorization: `Bearer ${accessToken.token.access_token}`,
+        };
 
-          const response = await this.$axios.put('/rate/update/' + this.rate.id, requestData);
-          console.log('Update rate =', response.data);
-          this.rate = {}; // Effacez les données du conducteur après la mise à jour réussie
-          this.showSnackbar('tarif modifié avec succès', 'success');
-          this.updateDialog = false;
-          this.get_rates();
-        } catch (error) {
-          console.error('Erreur lors de la mise à jour:', error);
+        console.log("entete", headers);
+        if (valid) {
+          try {
+            console.log('rate =', this.rate);
+            const requestData = {
+              id: this.rate.id,
+              libelle: this.rate.libelle,
+              price: this.rate.price,
+              credit: this.rate.credit,
+              // created_at: this.rate.created_at,
+              // updated_at: this.rate.updated_at,
+            };
+
+            const response = await this.$axios.put('/rate/update/' + this.rate.id, requestData, {
+              headers: headers,
+            });
+            console.log('Update rate =', response.data);
+            this.rate = {}; // Effacez les données du conducteur après la mise à jour réussie
+            this.showSnackbar('tarif modifié avec succès', 'success');
+            this.updateDialog = false;
+            this.get_rates();
+          } catch (error) {
+            console.error('Erreur lors de la mise à jour:', error);
+            this.showSnackbar('Une erreur s\'est produite lors de la modification ...', 'error');
+          }
+        } else {
+          console.log("BAD !!!!");
           this.showSnackbar('Une erreur s\'est produite lors de la modification ...', 'error');
         }
-      } else {
-        console.log("BAD !!!!");
-        this.showSnackbar('Une erreur s\'est produite lors de la modification ...', 'error');
       }
+
     },
 
     deleteItemConfirm() {
+      const accessToken = local.getSharedData();
+
+      console.log("accessToken", accessToken.token)
       console.log('rate =', this.rate);
-      const requestData = {
-        id: this.rate.id,
-        libelle: this.rate.libelle,
-        price: this.rate.price,
-        credit: this.rate.credit,
-      };
-      this.$axios.delete('/rate/delete/' + this.rate.id, requestData)
-        .then(() => {
-          this.showSnackbar('Tarif supprimé avec succès', 'success');
-          this.get_rates(); // Rafraîchit la liste des tarifs après la suppression
-        })
-        .catch((error) => {
-          console.error('Erreur lors de la suppression du tarif:', error);
-          this.showSnackbar('Erreur lors de la suppression du tarif', 'error');
-        })
-        .finally(() => {
-          this.dialogDelete = false; // Ferme la boîte de dialogue après la suppression
-        });
+      if (accessToken) {
+        const headers = {
+          Authorization: `Bearer ${accessToken.token.access_token}`,
+        };
+
+        console.log("entete", headers);
+
+
+        this.$axios.delete(`/rate/delete/${this.rate.id}`,{
+            headers: headers,
+            requestData: {
+              id: this.rate.id,
+              libelle: this.rate.libelle,
+              price: this.rate.price,
+              credit: this.rate.credit,
+            }
+          }
+
+        )
+          .then(() => {
+            this.showSnackbar('Tarif supprimé avec succès', 'success');
+            this.get_rates(); // Rafraîchit la liste des tarifs après la suppression
+          })
+          .catch((error) => {
+            console.error('Erreur lors de la suppression du tarif:', error);
+            this.showSnackbar('Erreur lors de la suppression du tarif', 'error');
+          })
+          .finally(() => {
+            this.dialogDelete = false; // Ferme la boîte de dialogue après la suppression
+          });
+      }
+
     },
 
 

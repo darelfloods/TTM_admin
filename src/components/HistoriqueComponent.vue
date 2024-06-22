@@ -54,6 +54,7 @@
 
     <div>
       <v-card class="mx-auto mt-8" max-width="1250">
+        <v-btn prepend-icon="mdi-reload" color="blue" @click="get_events"><v-span>Actualiser</v-span></v-btn>
         <v-card-title>
           Toute l'historique
           <v-spacer></v-spacer>
@@ -90,9 +91,11 @@ export default {
     search: "",
     headers: [
       { key: "ip_address", title: "Adresse Ip" },
+      { key: `current_user.lastname`, title: 'Utilisateur' },
+      // { key: `current_user.pseudo`, title: 'Utilisateur' },
+
       { key: "action", title: "Action effectuée" },
-      { key: "entity", title: "Entité" },
-      { key: "date_time", title: "Date" },
+      { key: "date_time", title: "Date & heure" },
       // { title: "Actions", key: "actions", sortable: false },
     ],
     events: [],
@@ -105,6 +108,8 @@ export default {
 
   },
   computed: {
+
+
     numberOfevents() {
       // Utilisez la propriété length pour obtenir le nombre de events dans le tableau
       return this.events.length;
