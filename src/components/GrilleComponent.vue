@@ -46,7 +46,13 @@
           <v-text-field v-model="search" label="Recherche" single-line hide-details variant="outlined"></v-text-field>
         </v-card-title>
 
-        <v-data-table :headers="headers" :items="users" :search="search" items-per-page="5">
+        <v-data-table 
+          :headers="headers" 
+          :items="users" 
+          :search="search" 
+          :loading="loading"
+          loading-text="Chargement des données..."
+          items-per-page="5">
           <template v-slot:item.actions="{ item }">
             <v-container>
               <v-row justify="center" align="center">
@@ -181,6 +187,7 @@ export default {
   data: () => ({
 
     selectedItem: null, // Initialisez la valeur sélectionnée
+    loading: false,
     snackbar: false,
     snackbarText: '',
     snackbarColor: '',
@@ -269,24 +276,24 @@ export default {
 
 
     async get_tarif() {
+      this.loading = true;
       try {
         const response = await this.$axios.get("/price_list/all");
-        for (var i = 0; i < response.data.length; i++) {
-          response.data[i].subscription_date = this.formattedDate(
-            response.data[i].subscription_date
-          );
-          response.data[i].updated_at = this.formattedDate(
-            response.data[i].updated_at
-          );
-          response.data[i].created_at = this.formattedDate(
-            response.data[i].created_at
-          );
-        }
-        this.users = response.data;
+        // Optimisation : utiliser map() au lieu de boucle for pour un formatage plus rapide
+        const formatDate = this.formattedDate;
+        this.users = response.data.map(item => ({
+          ...item,
+          subscription_date: item.subscription_date ? formatDate(item.subscription_date) : null,
+          updated_at: item.updated_at ? formatDate(item.updated_at) : null,
+          created_at: item.created_at ? formatDate(item.created_at) : null
+        }));
         console.log('all tarifs =', this.users);
 
       } catch (error) {
         console.error('Error fetching users:', error);
+        this.showSnackbar('Erreur lors du chargement des grilles', 'error');
+      } finally {
+        this.loading = false;
       }
     },
     async add_tarif() {

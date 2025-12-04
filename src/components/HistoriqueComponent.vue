@@ -60,7 +60,12 @@
           <v-spacer></v-spacer>
           <v-text-field v-model="search" label="Recherche" single-line hide-details variant="solo-filled"></v-text-field>
         </v-card-title><br><br>
-        <v-data-table :headers="headers" :items="events" :search="search">
+        <v-data-table 
+          :headers="headers" 
+          :items="events" 
+          :search="search"
+          :loading="loading"
+          loading-text="Chargement de l'historique...">
           <template v-slot:item.>
             <v-container>
               <v-row justify="center">
@@ -86,6 +91,7 @@ export default {
     VDataTable,
   },
   data: () => ({
+    loading: false,
     updateDialog: false,
     dialog: false,
     search: "",
@@ -141,23 +147,27 @@ export default {
   },
   methods: {
     async get_events() {
-      this.$axios.get("/event/all").then((response) => {
-        for (var i = 0; i < response.data.length; i++) {
-          response.data[i].date_time = this.formattedDate(
-            response.data[i].date_time
-          );
-          response.data[i].created_at = this.formattedDate(
-            response.data[i].created_at
-          );
-        }
-        this.events = response.data;
-        this.events_address_ip = response.data.map(event => event.ip_address);
-        this.events_actions = response.data.map(event => event.action);
-        console.log('all events =', response.data);
+      this.loading = true;
+      try {
+        const response = await this.$axios.get("/event/all");
+        // Optimisation : utiliser map() au lieu de boucle for pour un formatage plus rapide
+        const formatDate = this.formattedDate;
+        this.events = response.data.map(event => ({
+          ...event,
+          date_time: event.date_time ? formatDate(event.date_time) : null,
+          created_at: event.created_at ? formatDate(event.created_at) : null
+        }));
+        this.events_address_ip = this.events.map(event => event.ip_address);
+        this.events_actions = this.events.map(event => event.action);
+        console.log('all events =', this.events);
         console.log('all addresses =', this.events_address_ip);
         console.log('all actions =', this.events_actions);
-
-      });
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        // Pas de snackbar dans ce composant, juste logger l'erreur
+      } finally {
+        this.loading = false;
+      }
     },
 
   },

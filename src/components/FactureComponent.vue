@@ -48,7 +48,12 @@
           <v-text-field v-model="search" label="Recherche" single-line hide-details variant="outlined"></v-text-field>
         </v-card-title><br><br>
 
-        <v-data-table :headers="headers" :items="factures" :search="search">
+        <v-data-table 
+          :headers="headers" 
+          :items="factures" 
+          :search="search"
+          :loading="loading"
+          loading-text="Chargement des factures...">
           <template v-slot:item.actions="{ item }">
             <v-container>
               <v-row justify="center" align="center">
@@ -189,6 +194,7 @@ export default {
   },
   data: () => ({
     selectedItem: null, // Initialisez la valeur sélectionnée
+    loading: false,
     snackbar: false,
     snackbarText: '',
     snackbarColor: '',
@@ -256,11 +262,17 @@ export default {
     },
 
     async getFacture() {
-      this.$axios.get("/facture/all").then((response) => {
+      this.loading = true;
+      try {
+        const response = await this.$axios.get("/facture/all");
         this.factures = response.data;
-
         console.log('all facture =', response.data);
-      });
+      } catch (error) {
+        console.error('Error fetching factures:', error);
+        this.showSnackbar('Erreur lors du chargement des factures', 'error');
+      } finally {
+        this.loading = false;
+      }
     },
 
     async add_facture() {

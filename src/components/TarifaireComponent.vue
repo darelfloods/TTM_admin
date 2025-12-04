@@ -48,7 +48,13 @@
  <v-text-field v-model="search" label="Recherche" single-line hide-details variant="outlined"></v-text-field>
         </v-card-title><br><br> -->
 
-      <v-row>
+      <v-row v-if="loading">
+        <v-col cols="12" class="text-center">
+          <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+          <p class="mt-4">Chargement des tarifs...</p>
+        </v-col>
+      </v-row>
+      <v-row v-else>
         <v-col v-for="(rate, index) in rates" :key="index" cols="6" md="4" :headers="headers" :items="rates"
           :search="search">
           <v-card class="mx-4 my-6" width="300" style="border-radius: 8rem;
@@ -204,6 +210,7 @@ export default {
     // VDataTable,
   },
   data: () => ({
+    loading: false,
     snackbar: false,
     snackbarText: '',
     snackbarColor: '',
@@ -273,12 +280,16 @@ export default {
     },
 
     async get_rates() {
+      this.loading = true;
       try {
         const response = await this.$axios.get("/rate/all");
         this.rates = response.data;
         console.log('all rates =', this.rates); // Ajoutez cette ligne
       } catch (error) {
         console.error('Error fetching rates:', error);
+        this.showSnackbar('Erreur lors du chargement des tarifs', 'error');
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -294,17 +305,27 @@ export default {
         };
 
         console.log("entete", headers);
+        // Convertir les valeurs en nombres avant l'envoi
+        const rateData = {
+          libelle: this.rate.libelle,
+          price: parseFloat(this.rate.price) || 0,
+          credit: parseInt(this.rate.credit) || 0
+        };
         this.$axios
-          .post("/rate/add", this.rate, {
+          .post("/rate/add", rateData, {
             headers: headers,
           }).then((response) => {
             this.rate = {};
             console.log('Add rate =', response);
             this.get_rates();
+            this.showSnackbar('Tarif ajouté avec succès', 'success');
+            this.dialog = false;
 
           })
           .catch((error) => {
-            console.log(error.response.data.detail);
+            console.error('Error adding rate:', error);
+            const errorMessage = error.response?.data?.detail || 'Une erreur s\'est produite lors de l\'ajout du tarif';
+            this.showSnackbar(errorMessage, 'error');
 
           });
       }
@@ -316,9 +337,6 @@ export default {
       if (valid) {
         console.log(this.rate);
         await this.add_rate();
-        await this.get_rates();
-        this.showSnackbar('tarif ajouté avec succès', 'success');
-        this.dialog = false;
       } else {
         console.log("BAD  !!!!");
         this.showSnackbar('Une erreur s\'est produite lors de l\'ajout d\'un tarif verifiez les champs', 'error');
@@ -340,11 +358,12 @@ export default {
         if (valid) {
           try {
             console.log('rate =', this.rate);
+            // Convertir les valeurs en nombres avant l'envoi
             const requestData = {
               id: this.rate.id,
               libelle: this.rate.libelle,
-              price: this.rate.price,
-              credit: this.rate.credit,
+              price: parseFloat(this.rate.price) || 0,
+              credit: parseInt(this.rate.credit) || 0,
               // created_at: this.rate.created_at,
               // updated_at: this.rate.updated_at,
             };

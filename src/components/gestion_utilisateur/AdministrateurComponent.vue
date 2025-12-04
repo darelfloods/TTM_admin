@@ -47,7 +47,13 @@
           <v-text-field v-model="search" label="Recherche" single-line hide-details variant="outlined"></v-text-field>
         </v-card-title>
 
-        <v-data-table :headers="headers" :items="users" :search="search" items-per-page="5">
+        <v-data-table 
+          :headers="headers" 
+          :items="users" 
+          :search="search" 
+          :loading="loading"
+          loading-text="Chargement des données..."
+          items-per-page="5">
           <template v-slot:item.actions="{ item }">
             <v-container>
               <v-row justify="center" align="center">
@@ -286,6 +292,7 @@ export default {
   data: () => ({
 
     selectedItem: null, // Initialisez la valeur sélectionnée
+    loading: false,
     snackbar: false,
     snackbarText: '',
     snackbarColor: '',
@@ -399,26 +406,26 @@ export default {
     },
 
     async get_user() {
+      this.loading = true;
       try {
         const response = await this.$axios.get("/account/get_by_role_admin");
-        for (var i = 0; i < response.data.length; i++) {
-          response.data[i].subscription_date = this.formattedDate(
-            response.data[i].subscription_date
-          );
-          response.data[i].updated_at = this.formattedDate(
-            response.data[i].updated_at
-          );
-          response.data[i].created_at = this.formattedDate(
-            response.data[i].created_at
-          );
-        }
+        // Optimisation : utiliser map() au lieu de boucle for pour un formatage plus rapide
+        const formatDate = this.formattedDate;
+        this.users = response.data.map(user => ({
+          ...user,
+          subscription_date: user.subscription_date ? formatDate(user.subscription_date) : null,
+          updated_at: user.updated_at ? formatDate(user.updated_at) : null,
+          created_at: user.created_at ? formatDate(user.created_at) : null
+        }));
 
-        this.users = response.data;
         this.userIds = this.users.map(user => user.id);
         console.log('all users =', this.users);
         console.log('all user_id =', this.userIds);
       } catch (error) {
         console.error('Error fetching users:', error);
+        this.showSnackbar('Erreur lors du chargement des utilisateurs', 'error');
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -432,26 +439,34 @@ export default {
 
         console.log("entete", headers);
         try {
+          // Préparer les données en s'assurant que les valeurs sont correctes
           const Data = {
-
-            firstname: this.user.firstname,
-            lastname: this.user.lastname,
-            email: this.user.email,
-            phone: this.user.phone,
-            role: this.user.role,
+            firstname: this.user.firstname || null,
+            lastname: this.user.lastname || '',
+            email: this.user.email || '',
+            phone: this.user.phone || '',
+            role: this.user.role || 'ADMIN',
             password: "root"
           };
+          
+          // Vérifier que les champs requis sont remplis
+          if (!Data.lastname || !Data.email || !Data.phone || !Data.role) {
+            this.showSnackbar('Veuillez remplir tous les champs obligatoires', 'error');
+            return;
+          }
+          
           const response = await this.$axios.post("/user/add", Data, {
             headers: headers,
           });
           this.user = {};  // Effacez les données après l'ajout réussi
-          console.log('Add user =', response.Data);
+          console.log('Add user =', response.data);
           this.get_user();  // Rafraîchissez la liste des utilisateurs
           this.showSnackbar('Utilisateur ajouté avec succès', 'success');
           this.dialog = false;
         } catch (error) {
           console.error('Error adding user:', error);
-          this.showSnackbar('Une erreur s\'est produite lors de l\'ajout de l\'utilisateur, veuillez vérifier les champs', 'error');
+          const errorMessage = error.response?.data?.detail || 'Une erreur s\'est produite lors de l\'ajout de l\'utilisateur, veuillez vérifier les champs';
+          this.showSnackbar(errorMessage, 'error');
         }
       }
 
@@ -463,9 +478,6 @@ export default {
       if (valid) {
         console.log(this.user);
         await this.add_user();
-        await this.get_user();
-        this.showSnackbar('Utilisateur ajouté avec succès', 'success');
-        this.dialog = false;
       } else {
         console.log("BAD  !!!!");
         this.showSnackbar('Une erreur s\'est produite lors de l\'ajout de l\'utilisateur verifiez les champs', 'error');

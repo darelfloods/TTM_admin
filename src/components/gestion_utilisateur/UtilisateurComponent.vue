@@ -57,7 +57,13 @@
           <v-text-field v-model="search" label="Recherche" single-line hide-details variant="outlined"></v-text-field>
         </v-card-title>
 
-        <v-data-table :headers="headers" :items="users" :search="search" items-per-page="5">
+        <v-data-table 
+          :headers="headers" 
+          :items="users" 
+          :search="search" 
+          :loading="loading"
+          loading-text="Chargement des données..."
+          items-per-page="5">
           <template v-slot:item.actions="{ item }">
             <v-container>
               <!-- <v-row justify="center" align="center">
@@ -277,6 +283,7 @@ export default {
   data: () => ({
 
     selectedItem: null, // Initialisez la valeur sélectionnée
+    loading: false,
     snackbar: false,
     snackbarText: '',
     snackbarColor: '',
@@ -399,26 +406,26 @@ export default {
     },
 
     async get_user() {
+      this.loading = true;
       try {
         const response = await this.$axios.get("/account/get_by_role_user");
-        for (var i = 0; i < response.data.length; i++) {
-          response.data[i].subscription_date = this.formattedDate(
-            response.data[i].subscription_date
-          );
-          response.data[i].updated_at = this.formattedDate(
-            response.data[i].updated_at
-          );
-          response.data[i].created_at = this.formattedDate(
-            response.data[i].created_at
-          );
-        }
+        // Optimisation : utiliser map() au lieu de boucle for pour un formatage plus rapide
+        const formatDate = this.formattedDate;
+        this.users = response.data.map(user => ({
+          ...user,
+          subscription_date: user.subscription_date ? formatDate(user.subscription_date) : null,
+          updated_at: user.updated_at ? formatDate(user.updated_at) : null,
+          created_at: user.created_at ? formatDate(user.created_at) : null
+        }));
 
-        this.users = response.data;
         // this.userIds = this.users.map(user => user.id);
         console.log('all users =', this.users);
         console.log('all user_id =', this.userIds);
       } catch (error) {
         console.error('Error fetching users:', error);
+        this.showSnackbar('Erreur lors du chargement des utilisateurs', 'error');
+      } finally {
+        this.loading = false;
       }
     },
     async add_user() {

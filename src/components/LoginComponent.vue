@@ -166,7 +166,8 @@ export default {
           formData.append('password', this.password);
 
           await this.$axios
-            .post("auth/login_admin", formData)
+            // Important : endpoint backend = /auth/login_admin (avec slash)
+            .post("/auth/login_admin", formData)
             .then((response) => {
               appStore.setLogged()
               appStore.getCurrentUser(response.data.user)
@@ -186,9 +187,10 @@ export default {
             })
         }
         catch (error) {
-          // console.log(error.response.data.detail) ;
-
-          this.error = error.response.data.detail;
+          // Gestion propre de l'erreur de connexion
+          const detail = error?.response?.data?.detail || "Connexion impossible, vérifiez vos identifiants ou le serveur."
+          this.error = detail
+          this.showSnackbar(detail, 'error')
         }
         this.loading = !this.loading
       }
