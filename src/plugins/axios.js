@@ -7,7 +7,7 @@ const axiosPlugin = {
 
     const axiosInstance = axios.create({
       // Configuration de la baseURL de l'admin
-      // - par défaut : http://localhost:8000 (backend local)
+      // - par défaut : https://api-ttm.onrender.com (backend local)
       // - override possible via VITE_API_BASE_URL
       // - autres serveurs gardés comme fallback dans ENV.API_BASE_URLS
       baseURL: ENV.API_BASE_URL,

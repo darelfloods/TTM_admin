@@ -6,7 +6,7 @@ const ENV = {
   API_BASE_URL:
     // Priorité: variable d'environnement > backend local (dev) > backend Render > anciens serveurs
     (import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
-    'http://localhost:8000',
+    'https://api-ttm.onrender.com',
 
   // Liste ordonnée des bases (avec fallback). La première qui répond est utilisée côté appelant si besoin.
   API_BASE_URLS: (() => {
@@ -14,7 +14,7 @@ const ENV = {
     const norm = (u) => (u ? String(u).replace(/\/+$/g, '') : u)
     const candidates = [
       norm(import.meta.env && import.meta.env.VITE_API_BASE_URL),
-      'http://localhost:8000', // Backend local pour développement (priorité)
+      'https://api-ttm.onrender.com', // Backend local pour développement (priorité)
       'https://api-ttm.onrender.com', // Backend Render en fallback
       norm(import.meta.env && import.meta.env.VITE_API_FALLBACK_BASE_URL),
       'https://51.68.46.67:8000', // Ancien backend hébergé
