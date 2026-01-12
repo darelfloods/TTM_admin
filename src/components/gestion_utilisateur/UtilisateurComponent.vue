@@ -73,10 +73,10 @@
               <v-row justify="center" align="center">
                 <v-btn prepend-icon="mdi-account-off" color="red"
                   @click="dialogDelete = true; id_compte = item.id; user = item.user;"
-                  :disabled="!item.activate === true"></v-btn>
+                  :disabled="!item.activate === true || isLecteur"></v-btn>
                 <v-btn prepend-icon="mdi-account-reactivate" color="blue"
                   @click="choiceDialog = true; id_compte = item.id; user = item.user;"
-                  :disabled="!item.activate === false"></v-btn>
+                  :disabled="!item.activate === false || isLecteur"></v-btn>
 
               </v-row>
 
@@ -118,8 +118,8 @@
                     hint="Veuillez entrer un email valide" variant="outlined"></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6">
-                  <v-text-field v-model="user.role" clearable :rules="rules" label="Rôle *"
-                    hint="Veuillez sélectionner un rôle" disabled variant="outlined"></v-text-field>
+                  <v-select v-model="user.role" :items="roles" :rules="rules" label="Rôle *"
+                    hint="Veuillez sélectionner un rôle" variant="outlined"></v-select>
                 </v-col>
               </v-row>
             </v-container>
@@ -321,8 +321,9 @@ export default {
       role: "USER",
     },
     id_compte: "",
+    isLecteur: false,
 
-    // roles: ['USER'],
+    roles: ['USER', 'LECTEUR'],
     rules: [
       (v) => !!v || 'Ce champ est requis', // Add any validation rules you need
     ],
@@ -417,6 +418,11 @@ export default {
           updated_at: user.updated_at ? formatDate(user.updated_at) : null,
           created_at: user.created_at ? formatDate(user.created_at) : null
         }));
+
+        // Get current user role from local storage or store
+        const userData = local.getSharedData();
+        const role = userData?.user?.role || '';
+        this.isLecteur = role === 'LECTEUR';
 
         // this.userIds = this.users.map(user => user.id);
         console.log('all users =', this.users);

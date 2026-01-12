@@ -331,7 +331,7 @@ export default {
     },
     id_compte: "",
 
-    roles: ['ADMIN', 'USER'],
+    roles: ['ADMIN', 'USER', 'LECTEUR'],
     rules: [
       (v) => !!v || 'Ce champ est requis', // Add any validation rules you need
     ],
